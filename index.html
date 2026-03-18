@@ -1,0 +1,108 @@
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+<title>Horror Demo</title>
+
+<style>
+body {
+    margin: 0;
+    background: black;
+    overflow: hidden;
+    cursor: none;
+}
+
+/* 手机隐藏鼠标效果 */
+@media (pointer: coarse) {
+    body { cursor: default; }
+}
+
+video {
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+}
+
+/* UI */
+#menu {
+    position: absolute;
+    top: 55%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: none;
+}
+
+/* 按钮适配手机 */
+.btn {
+    padding: 16px 40px;
+    font-size: 20px;
+    color: #fff;
+    background: rgba(0,0,0,0.7);
+    border: 2px solid #fff;
+}
+
+/* 闪黑 */
+#flash {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: black;
+    opacity: 0;
+}
+
+/* CRT */
+#crt {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+        rgba(255,255,255,0.03) 0px,
+        transparent 2px
+    );
+}
+</style>
+</head>
+
+<body>
+
+<video id="video" autoplay muted playsinline>
+    <source src="intro.mp4" type="video/mp4">
+</video>
+
+<div id="flash"></div>
+
+<div id="menu">
+    <button class="btn" onclick="startGame()">新游戏</button>
+</div>
+
+<div id="crt"></div>
+
+<audio id="flashSound" src="flash.mp3"></audio>
+
+<script>
+const video = document.getElementById("video");
+const flash = document.getElementById("flash");
+const menu = document.getElementById("menu");
+const sound = document.getElementById("flashSound");
+
+video.addEventListener("ended", () => {
+    flash.style.opacity = 1;
+    sound.play().catch(()=>{});
+
+    setTimeout(() => {
+        flash.style.opacity = 0;
+        video.pause();
+        menu.style.display = "block";
+    }, 120);
+});
+
+function startGame() {
+    window.location.href = "game.html";
+}
+</script>
+
+</body>
+</html>
