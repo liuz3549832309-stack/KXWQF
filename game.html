@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>荒村食谈 · 赛博民俗微恐文字 demo</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #0b0f0b;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 8px;
+        }
+
+        /* 手机屏幕 — 模拟江小果的直播手机界面 */
+        .phone-frame {
+            width: 100%;
+            max-width: 380px;
+            background: #0a1a0a;
+            border: 2px solid #2b5a2b;
+            border-radius: 28px;
+            padding: 12px 8px 16px 8px;
+            box-shadow: 0 0 20px #2f4f2f, inset 0 0 8px #1e3b1e;
+            position: relative;
+            backdrop-filter: blur(1px);
+        }
+
+        /* 屏幕有老电视绿色噪点叠层 */
+        .screen-glitch {
+            position: relative;
+            background: #102010;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid #2f8f2f;
+            box-shadow: inset 0 0 30px #00000099, 0 0 0 2px #1e4f1e;
+        }
+
+        .screen-glitch::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, rgba(0,255,65,0.03) 0px, rgba(0,0,0,0.5) 2px, transparent 3px);
+            pointer-events: none;
+            z-index: 5;
+            mix-blend-mode: overlay;
+        }
+
+        /* 顶部状态栏：信号/电量 */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 12px 2px 12px;
+            background: #0c1f0c;
+            border-bottom: 1px solid #1f9f3f;
+            color: #3fbf5f;
+            font-size: 14px;
+            letter-spacing: 1px;
+            text-shadow: 0 0 3px #00cc33;
+            font-weight: bold;
+            position: relative;
+        }
+
+        .signal {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .signal span {
+            display: inline-block;
+            width: 5px;
+            height: 10px;
+            background: #2b7a2b;
+            margin-right: 2px;
+        }
+
+        .signal span:nth-child(1) { height: 6px; background: #7fdf7f; }
+        .signal span:nth-child(2) { height: 9px; background: #4fbf4f; }
+        .signal span:nth-child(3) { height: 12px; background: #2faf2f; }
+        .battery {
+            border: 1px solid #3fbf5f;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: #0f2a0f;
+            color: #9fef9f;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .battery::after {
+            content: " ▰▰▰▰▱";
+            letter-spacing: 0px;
+            font-size: 10px;
+            color: #8fdf8f;
+        }
+
+        /* 存档按钮 */
+        .save-btn {
+            position: absolute;
+            top: 6px;
+            right: 15px;
+            font-size: 20px;
+            cursor: pointer;
+            color: #3fbf5f;
+            text-shadow: 0 0 5px #00ff00;
+            z-index: 10;
+            background: #0c1f0c;
+            padding: 2px 8px;
+            border-radius: 20px;
+            border: 1px solid #2f8f2f;
+        }
+
+        /* 主画面 — 摄像头视角 */
+        .camera-view {
+            min-height: 380px;
+            background: #152815;
+            background-image: radial-gradient(circle at 30% 40%, #1b3b1b 2px, transparent 2px), 
+                              radial-gradient(circle at 70% 80%, #1f4f1f 1px, transparent 2px);
+            background-size: 40px 40px, 80px 80px;
+            padding: 20px 16px;
+            border-top: 2px solid #2f8f2f;
+            border-bottom: 2px solid #2f8f2f;
+            color: #bfffc0;
+            text-shadow: 0 0 5px #00ee40;
+            font-size: 17px;
+            line-height: 1.6;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* 剧情文字框 — 打字机效果容器 */
+        .story-panel {
+            background: rgba(0, 20, 0, 0.7);
+            backdrop-filter: blur(2px);
+            padding: 14px 12px;
+            border-left: 4px solid #5fff5f;
+            box-shadow: inset 0 0 20px #001100;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            word-break: break-word;
+        }
+
+        .typing-text {
+            min-height: 3.6em;
+            white-space: pre-wrap;
+            font-size: 16px;
+            font-weight: 500;
+            color: #cfffcf;
+        }
+
+        .typing-text::after {
+            content: "█";
+            opacity: 1;
+            animation: blink 1s infinite;
+            margin-left: 2px;
+            color: #6fef6f;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* 直播弹幕区 (左下滚动) */
+        .danmaku {
+            background: #021002ee;
+            border: 1px solid #3f9f3f;
+            border-radius: 20px;
+            padding: 8px 14px;
+            margin-top: 6px;
+            font-size: 14px;
+            color: #ddffdd;
+            max-width: 95%;
+            box-shadow: 0 -2px 5px #2f9f2f;
+            backdrop-filter: blur(2px);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .danmaku-scroll {
+            display: inline-block;
+            animation: scrollLeft 10s linear infinite;
+            white-space: nowrap;
+            padding-left: 100%;
+        }
+
+        .danmaku-scroll span {
+            margin-right: 32px;
+            color: #b3ffb3;
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        .danmaku-scroll .red {
+            color: #ff6f6f;
+            text-shadow: 0 0 8px red;
+        }
+
+        @keyframes scrollLeft {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        /* 物品栏或交互区 */
+        .interact-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 18px 0 10px 0;
+            justify-content: center;
+        }
+
+        .game-btn {
+            background: #102310;
+            border: 2px solid #2b9f2b;
+            color: #b0ffb0;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            box-shadow: 0 0 10px #1f9f1f;
+            backdrop-filter: blur(3px);
+            transition: 0.2s;
+            cursor: pointer;
+            flex: 1 0 auto;
+            min-width: 120px;
+        }
+
+        .game-btn:active {
+            background: #1f4f1f;
+            border-color: #efefef;
+            color: #ffffff;
+            transform: scale(0.96);
+        }
+
+        .inventory-slot {
+            background: #052005;
+            border: 2px dashed #2fcf2f;
+            border-radius: 16px;
+            padding: 8px 14px;
+            font-size: 15px;
+            color: #8fef8f;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 6px 0;
+        }
+
+        .inventory-slot span {
+            background: #1f3f1f;
+            border-radius: 20px;
+            padding: 4px 14px;
+            border: 1px solid #5fff5f;
+        }
+
+        .glitch-img {
+            font-family: monospace;
+            color: #ff7f7f;
+            background: #2a0f0f;
+            padding: 4px 10px;
+            border-radius: 30px;
+            display: inline-block;
+            margin: 5px 0;
+            border: 1px solid red;
+            text-shadow: 2px 2px 0 #ff0000;
+        }
+
+        footer {
+            color: #1f7f1f;
+            text-align: center;
+            padding-top: 8px;
+            font-size: 12px;
+        }
+
+        /* 存档覆盖层 */
+        .save-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 10, 0, 0.95);
+            backdrop-filter: blur(3px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+        }
+
+        .save-panel {
+            background: #0f200f;
+            border: 3px solid #2f9f2f;
+            border-radius: 30px;
+            padding: 30px 20px;
+            width: 90%;
+            max-width: 300px;
+            box-shadow: 0 0 30px #00aa00;
+            text-align: center;
+        }
+
+        .slot {
+            background: #1f3f1f;
+            border: 1px solid #5fff5f;
+            border-radius: 20px;
+            padding: 12px;
+            margin-bottom: 15px;
+            color: #cfffcf;
+        }
+
+        .slot p {
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .slot-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .slot-buttons button {
+            background: #0f2f0f;
+            border: 2px solid #5fef5f;
+            color: #d0ffd0;
+            padding: 5px 15px;
+            border-radius: 30px;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        .slot-buttons button:active {
+            background: #2f8f2f;
+        }
+
+        .save-panel > button {
+            background: #3f1f1f;
+            border: 2px solid #ff5f5f;
+            color: #ffb0b0;
+            padding: 10px 25px;
+            border-radius: 50px;
+            font-family: inherit;
+            font-weight: bold;
+            margin-top: 10px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+<div class="phone-frame">
+    <div class="screen-glitch">
+        <!-- 状态栏 + 存档按钮 -->
+        <div class="status-bar">
+            <div class="signal">
+                <span></span><span></span><span></span> 罗村·荒
+            </div>
+            <div class="battery">
+                97%
+            </div>
+            <div class="save-btn" onclick="openSave()">💾</div>
+        </div>
+
+        <!-- 主摄像头视图 + 剧情 -->
+        <div class="camera-view" id="cameraView">
+            <!-- 打字机故事区域 -->
+            <div class="story-panel" id="storyPanel">
+                <div class="typing-text" id="typingText"></div>
+            </div>
+
+            <!-- 弹幕区 (直播弹幕) -->
+            <div class="danmaku" id="danmakuBox">
+                <div class="danmaku-scroll" id="danmakuScroll">
+                    <span>👻 这村真阴间</span>
+                    <span class="red">主播别回头</span>
+                    <span>📡 信号弱</span>
+                    <span>🧵 红线……</span>
+                    <span class="red">她来了</span>
+                    <span>🍲 空锅?</span>
+                </div>
+            </div>
+
+            <!-- 动态交互按钮区域，根据剧情变化 -->
+            <div class="interact-area" id="interactArea"></div>
+
+            <!-- 迷你物品栏/背包提示 -->
+            <div class="inventory-slot" id="inventoryDisplay">
+                <span>📦 背包</span> 
+                <span id="item1">-</span>
+                <span id="item2">-</span>
+                <span id="item3">-</span>
+            </div>
+        </div>
+
+        <!-- 底部装饰 -->
+        <footer>⚡ 赛博符咒 · 直播中 ⚡</footer>
+    </div>
+
+    <!-- 存档覆盖层 -->
+    <div class="save-overlay" id="savePage" style="display:none;">
+        <div class="save-panel">
+            <div class="slot">
+                <p>存档位 1</p>
+                <div class="slot-buttons">
+                    <button onclick="saveGame(1)">保存</button>
+                    <button onclick="loadGame(1)">读取</button>
+                </div>
+            </div>
+            <div class="slot">
+                <p>存档位 2</p>
+                <div class="slot-buttons">
+                    <button onclick="saveGame(2)">保存</button>
+                    <button onclick="loadGame(2)">读取</button>
+                </div>
+            </div>
+            <div class="slot">
+                <p>存档位 3</p>
+                <div class="slot-buttons">
+                    <button onclick="saveGame(3)">保存</button>
+                    <button onclick="loadGame(3)">读取</button>
+                </div>
+            </div>
+            <button onclick="closeSave()">返回游戏</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // --- 游戏状态 ---
+        const state = {
+            step: 0,                // 0:村口大锅, 1:红线封村, 2:捡手机, 3:进入厨房, 4:收集食材, 5:合成汤, 6:倒汤结局
+            items: [],              // 收集的物品 ['红线', '银簪', '灰烬']
+            ghostPhone: false,       // 是否得到幽灵手机
+            glitchWatched: false,    // 是否触发回头事件
+            gameFinished: false
+        };
+
+        // 元素引用
+        const typingEl = document.getElementById('typingText');
+        const interactArea = document.getElementById('interactArea');
+        const invItem1 = document.getElementById('item1');
+        const invItem2 = document.getElementById('item2');
+        const invItem3 = document.getElementById('item3');
+        const danmakuScroll = document.getElementById('danmakuScroll');
+        const savePage = document.getElementById('savePage');
+
+        // 打字机效果队列
+        let isTyping = false;
+
+        // 工具函数：打字机输出 (每次完全替换)
+        function typeMessage(text, speed = 40) {
+            return new Promise((resolve) => {
+                if (isTyping) {
+                    // 如果正在打字，强行中止并重设
+                }
+                isTyping = true;
+                let i = 0;
+                typingEl.textContent = ''; // 清空，光标保留（after）
+                const interval = setInterval(() => {
+                    if (i < text.length) {
+                        typingEl.textContent += text.charAt(i);
+                        i++;
+                    } else {
+                        clearInterval(interval);
+                        isTyping = false;
+                        resolve();
+                    }
+                }, speed);
+            });
+        }
+
+        // 更新弹幕 (偶尔插入惊悚台词)
+        function setDanmaku(messages, isRed = false) {
+            let htmlSpans = '';
+            messages.forEach(msg => {
+                htmlSpans += `<span ${isRed ? 'class="red"' : ''}>${msg}</span> `;
+            });
+            danmakuScroll.innerHTML = htmlSpans;
+        }
+
+        // 刷新背包显示
+        function updateInventory() {
+            const inv = state.items;
+            invItem1.textContent = inv[0] || '—';
+            invItem2.textContent = inv[1] || '—';
+            invItem3.textContent = inv[2] || '—';
+        }
+
+        // 清空交互按钮区，并创建新按钮
+        function setButtons(buttons) {
+            interactArea.innerHTML = '';
+            buttons.forEach(btn => {
+                const b = document.createElement('button');
+                b.className = 'game-btn';
+                b.textContent = btn.label;
+                b.onclick = btn.onClick;
+                interactArea.appendChild(b);
+            });
+        }
+
+        // 剧情节点控制器
+        function goToStep(step) {
+            state.step = step;
+            if (step === 0) renderStep0();
+            else if (step === 1) renderStep1();
+            else if (step === 2) renderStep2();
+            else if (step === 3) renderStep3();
+            else if (step === 4) renderStep4();
+            else if (step === 5) renderStep5();
+            else if (step === 6) renderStep6();
+        }
+
+        // ---------- 场景定义 ----------
+
+        // STEP 0: 村口大锅
+        function renderStep0() {
+            typeMessage("江小果：兄弟们，这荒村怎么有口这么大的锅？里面全是灰...嗯，还是打开夜视模式看看锅里有什么吧！").then(()=>{
+                setDanmaku(['📷 画面糊了？？','主播别搞剧本','马赛克下面有东西'], false);
+            });
+            setButtons([
+                { label: '🔦 开启夜视', onClick: ()=>{
+                    typeMessage("锅底灰烬在夜视下变成疯狂闪烁的红绿马赛克... 刺耳电流声！").then(()=>{
+                        setDanmaku(['卧槽 马赛克！！！','🧿 眼睛花了','那是什么形状'], true);
+                    });
+                    setButtons([
+                        { label: '🚶 去村口小路', onClick: ()=> goToStep(1) },
+                        { label: '📱 再看大锅', onClick: ()=> {
+                            typeMessage("江小果：这马赛克...可能是我手机出问题了。");
+                        }}
+                    ]);
+                } }
+            ]);
+        }
+
+        // STEP 1: 红线封村
+        function renderStep1() {
+            typeMessage("小路被暗红色丝线缠绕，形成密不透风的网。江小果的手触碰到了红线，红色的丝线泛起奇异的光芒。他的手感到一阵尖锐的刺痛，只得猛地收回... 难道是鬼打墙，江小果腹诽一阵，只得又回到那口大锅前。").then(()=>{
+                setDanmaku(['🔴 竟然是红线封村','主包洗洗睡吧，今天出不去了','鬼打墙耶'], true);
+            });
+            setButtons([
+                { label: '🧵 回到大锅旁', onClick: ()=>{
+                    if (!state.ghostPhone) {
+                        typeMessage("刚回到大锅旁，一阵妖风吹过，江小果感觉衣服兜里多了什么东西。他小心翼翼地摸进自己的口袋：我靠，我兜里什么时候多了一个手机？！屏幕显示：入村不空手，敬上神明肉...").then(()=>{
+                            state.ghostPhone = true;
+                            setDanmaku(['📱 幽灵手机???','DOS绿字'], true);
+                        });
+                        setButtons([
+                            { label: '📱 查看手机', onClick: ()=> {
+                                typeMessage("手机壁纸正是这口大锅，突然，一行绿色字体幽幽地浮现：入村不空手，敬上神明肉。无菜不留客，饿鬼莫回头。这难道，是要我去厨房做菜吗？");
+                                setButtons([ { label: '🚪 推门进厨房', onClick: ()=> goToStep(2) } ]);
+                            }}
+                        ]);
+                    } else {
+                        goToStep(2);
+                    }
+                } }
+            ]);
+        }
+
+        // STEP 2: 进入厨房
+        function renderStep2() {
+            typeMessage("推开残破木门，厨房灶台破败，墙上贴着灶神画像——那灶神爷的脸竟是一张二维码。").then(()=>{
+                setDanmaku(['📲 请扫描灶神脸上的二维码...'], false);
+            });
+            setButtons([
+                { label: '📡 扫描二维码', onClick: ()=>{
+                    typeMessage("食谱提示：以执念为引，以岁月为骨，以腐朽为肉，方熬出孟婆汤。");
+                    setButtons([ { label: '🔍 搜寻厨房', onClick: ()=> goToStep(3) } ]);
+                } }
+            ]);
+        }
+
+        // STEP 3: 收集食材
+        function renderStep3() {
+            if (state.items.length === 0) {
+                typeMessage("江小果从门框上扯下红线，脚下一滑跌了一跤。竟然意外地在灶台深处发现一枚银簪。");
+            } else {
+                typeMessage("风呜呜地吹了起来，他身后突然响起一阵凄凄的女声：还差一把锅灰...");
+            }
+            // 收集逻辑
+            setButtons([
+                { label: '🧵 拿红线', onClick: ()=>{
+                    if (!state.items.includes('红丝线')) {
+                        state.items.push('红丝线'); updateInventory();
+                        typeMessage("红线放入背包");
+                    }
+                    tryCollect();
+                }},
+                { label: '⚜️ 拿银簪', onClick: ()=>{
+                    if (!state.items.includes('银簪')) {
+                        state.items.push('银簪'); updateInventory();
+                        typeMessage("银簪放入背包");
+                    }
+                    tryCollect();
+                }},
+                { label: '🌫️ 前往门外取灰', onClick: ()=>{
+                    if (!state.items.includes('灰烬')) {
+                        state.items.push('灰烬'); updateInventory();
+                        typeMessage("从大锅旁捧回一把诡异灰烬，灰土里有什么东西闪着绿光。");
+                    }
+                    tryCollect();
+                }}
+            ]);
+
+            const tryCollect = ()=>{
+                if (state.items.length === 3) {
+                    setButtons([ { label: '🍲 回到灶台合成', onClick: ()=> goToStep(4) } ]);
+                }
+            };
+        }
+
+        // STEP 4: 合成 + 回头恐惧
+        function renderStep4() {
+            if (!state.glitchWatched) {
+                typeMessage("将食材拖进锅中... 此时弹幕突然疯狂：主播！！你身后！！").then(()=>{
+                    setDanmaku(['主播你身后！！', '啊啊啊啊白衣服', '有个女的在看着你'], true);
+                });
+                setButtons([
+                    { label: '👻 猛然回头', onClick: ()=>{
+                        typeMessage("什么都没有... 只有破窗户嘎吱响。但右上角小窗里，一缕头发缩了回去。").then(()=>{
+                            setDanmaku(['👁️ 别回头！有东西！！', '快跑'], true);
+                        });
+                        state.glitchWatched = true;
+                        setButtons([ { label: '🔥 用手机生火', onClick: ()=> goToStep(5) } ]);
+                    } }
+                ]);
+            } else {
+                goToStep(5);
+            }
+        }
+
+        // STEP 5: 赛博肉汤完成
+        function renderStep5() {
+            typeMessage("江小果将幽灵手机对准锅底，屏幕发出高温红光，食材沸腾，散发出诡异肉香... 一碗漂浮乱码的“赛博数据神仙肉”完成。").then(()=>{
+                setDanmaku(['🍲 肉汤？…诶嘿嘿，好香？', '不能喝！！'], false);
+            });
+            setButtons([
+                { label: '🥣 端汤去大锅', onClick: ()=> goToStep(6) }
+            ]);
+        }
+
+        // STEP 6: 结局
+        function renderStep6() {
+            typeMessage("将肉汤倒进大锅，食材剧烈翻滚，直播间花屏。弹幕全是红色乱码：她来了她来了").then(()=>{
+                setDanmaku(['她来了她来了', '死机了!!!'], true);
+            });
+            setButtons([
+                { label: '📱 手机掉落', onClick: ()=>{
+                    typeMessage("一只苍白的手从锅底伸出，抓住江小果脚踝！手机掉落... 女鬼的脸贴上镜头，嘴角微笑...你终于来啦，晚饭吃什么呢？");
+                    setDanmaku(['菜已上齐！！', '客官慢用！！'], true);
+                    state.gameFinished = true;
+                    setButtons([
+                        { label: '⏳ 敬请期待', onClick: ()=>{} }
+                    ]);
+                }}
+            ]);
+        }
+
+        // 存档功能
+	function saveGame(slot) {
+   	 localStorage.setItem("gameSave_" + slot, JSON.stringify(state));
+    
+    // 直接找到对应存档位的保存按钮并修改文字
+    	const slotDivs = document.querySelectorAll('.slot');
+    	if (slotDivs && slotDivs[slot-1]) {
+        const saveBtn = slotDivs[slot-1].querySelector('.slot-buttons button:first-child');
+        if (saveBtn) {
+            saveBtn.textContent = '已存';
+            saveBtn.style.background = '#2f5f2f';
+            saveBtn.style.borderColor = '#afffaf';
+        }
+    }
+    
+    alert("已保存到存档 " + slot);
+}
+
+        function loadGame(slot) {
+            let data = localStorage.getItem("gameSave_" + slot);
+            if(data){
+                let loaded = JSON.parse(data);
+                state.step = loaded.step;
+                state.items = loaded.items || [];
+                state.ghostPhone = loaded.ghostPhone;
+                state.glitchWatched = loaded.glitchWatched;
+                state.gameFinished = loaded.gameFinished;
+                updateInventory();
+                goToStep(state.step);
+                closeSave();
+            } else {
+                alert("该存档位为空");
+            }
+        }
+
+        function openSave() {
+            document.getElementById('savePage').style.display = 'flex';
+        }
+
+        function closeSave() {
+            document.getElementById('savePage').style.display = 'none';
+        }
+
+        // 初始化剧情
+        function initGame() {
+            state.step = 0;
+            state.items = [];
+            state.ghostPhone = false;
+            state.glitchWatched = false;
+            updateInventory();
+            renderStep0();
+        }
+
+        // 启动
+        initGame();
+
+        // 额外细节：偶尔闪烁弹幕变色（模拟微恐）
+        setInterval(() => {
+            if (Math.random() < 0.3 && state.step > 1 && !state.gameFinished) {
+                let currentScroll = danmakuScroll.innerHTML;
+                danmakuScroll.innerHTML = currentScroll + '<span class="red">📟 信号..</span> ';
+            }
+        }, 8000);
+
+        // 暴露全局函数
+        window.saveGame = saveGame;
+        window.loadGame = loadGame;
+        window.openSave = openSave;
+        window.closeSave = closeSave;
+    })();
+</script>
+</body>
+</html>

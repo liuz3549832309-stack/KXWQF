@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>存档</title>
+
+<style>
+body {
+    background: black;
+    color: white;
+    text-align: center;
+    font-family: Arial;
+}
+
+button {
+    margin: 20px;
+    padding: 12px 30px;
+    font-size: 18px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>存档系统</h1>
+
+<button onclick="saveGame()">保存游戏</button>
+<button onclick="loadGame()">读取存档</button>
+
+<p id="info"></p>
+
+<script>
+function saveGame() {
+    const data = {
+        time: new Date().toLocaleString()
+    };
+    localStorage.setItem("saveData", JSON.stringify(data));
+    document.getElementById("info").innerText = "已保存：" + data.time;
+}
+
+function loadGame() {
+    const data = JSON.parse(localStorage.getItem("saveData"));
+    if (data) {
+        document.getElementById("info").innerText = "存档时间：" + data.time;
+    } else {
+        document.getElementById("info").innerText = "没有存档";
+    }
+}
+</script>
+
+</body>
+</html>
